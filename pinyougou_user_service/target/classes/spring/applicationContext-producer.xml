@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--创建一个DefaultMQProducer
+        init-method:对象创建后调用方法
+        destroy-method:对象销毁后调用方法
+    -->
+    <bean id="defaultMQProducer" class="org.apache.rocketmq.client.producer.DefaultMQProducer"
+          init-method="start" destroy-method="shutdown">
+        <!--设置组名字-->
+        <property name="producerGroup" value="pyg-user-service-producer-group" />
+        <!--设置NameServer地址-->
+        <property name="namesrvAddr" value="127.0.0.1:9876" />
+    </bean>
+</beans>

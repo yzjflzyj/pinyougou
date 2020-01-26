@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+    <!--dubbo生产者启动时使用的端口号,默认是20880-->
+    <dubbo:protocol name="dubbo" port="20889"></dubbo:protocol>
+    <dubbo:application name="pinyougou-seckill-service"/>
+    <dubbo:registry address="zookeeper://192.168.218.128:2181" check="false"/>
+    <dubbo:annotation package="com.pinyougou.seckill.service.impl" />
+    <!--全局参数配置,超时时间：8秒-->
+    <dubbo:provider timeout="8000" retries="0"/>
+
+    <!--抽取ID生成器，便于配置机器与数据中心id-->
+    <bean id="idWorker" class="com.pinyougou.Utils.IdWorker">
+        <!-- 工作机器ID -->
+        <constructor-arg index="0" value="0"></constructor-arg>
+        <!-- 数据中心ID -->
+        <constructor-arg index="1" value="2"></constructor-arg>
+    </bean>
+
+    <!--配置FreeMarkerConfigurer-->
+    <bean id="freemarkerConfig"  class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+        <property name="templateLoaderPath" value="/WEB-INF/ftl/" />
+        <property name="defaultEncoding" value="UTF-8" />
+    </bean>
+
+    <!--多线程注解驱动-->
+    <task:annotation-driven executor="taskExecutor" />
+    <!--Spring线程池-->
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <!--核心线程数，初始同时执行线程数-->
+        <property name="corePoolSize" value="10" />
+        <!--最大线程数-->
+        <property name="maxPoolSize" value="100" />
+        <!--最大队列数-->
+        <property name="queueCapacity" value="200" />
+        <!--线程最大空闲时间-->
+        <property name="keepAliveSeconds" value="3000" />
+        <!--拒绝策略,当线程池中的线程被占用完了，并且队列数也满了，
+            如果此时有新的任务要执行，使用该采取的策略处理任务-->
+        <property name="rejectedExecutionHandler">
+            <!--支持的策略有：
+                1.AbortPolicy：该策略是线程池的默认策略。使用该策略时，如果线程池队列满了
+                    丢掉这个任务并且抛出RejectedExecutionException异常。
+                2.DiscardPolicy：这个策略和AbortPolicy的slient(安静)版本，如果线程池队列满了，
+                    会直接丢掉这个任务并且不会有任何异常。
+                3.DiscardOldestPolicy：这个策略从字面上也很好理解，丢弃最老的。也就是说如果队列满了，
+                    会将最早进入队列的任务删掉腾出空间，再尝试加入队列。
+                4.CallerRunsPolicy：使用此策略，如果添加到线程池失败，那么主线程会自己去执行该任务，
+                    不会等待线程池中的线程去执行。就像是个急脾气的人，我等不到别人来做这件事就干脆自己干。
+                5.自定义：如果以上策略都不符合业务场景，那么可以自己定义一个拒绝策略，
+                    只要实现RejectedExecutionHandler接口，并且实现rejectedExecution方法就可以了。
+                    具体的逻辑就在rejectedExecution方法里去定义就OK了。
+            -->
+            <bean class="java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy" />
+        </property>
+    </bean>
+
+</beans>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                  http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <!--1.匿名访问
+    2.权限配置
+    iframe设置
+    权限设置
+    表单登录
+    csrf过滤器
+    退出登录
+    3.认证管理
+    认证逻辑
+    加密策略
+    4.密码加密对象
+    5.权限注解支持
+    6.权限注解扫描(扩大在mvc中的扫描范围)
+    7.mvc配置中引入security配置文件-->
+
+    <!--1.匿名访问-->
+    <http security="none" pattern="/css/**"/>
+    <http security="none" pattern="/img/**"/>
+    <http security="none" pattern="/js/**"/>
+    <http security="none" pattern="/plugins/**"/>
+    <http security="none" pattern="/shoplogin.html"/>
+    <!--放行注册功能-->
+    <http pattern="/register.html" security="none"/>
+    <http pattern="/seller/add.do" security="none"/>
+
+
+    <!--2.权限配置-->
+    <http auto-config="true" use-expressions="false">
+        <!--iframe设置-->
+        <headers>
+            <frame-options policy="SAMEORIGIN"/>
+        </headers>
+        <!--权限设置-->
+        <intercept-url pattern="/**" access="ROLE_SELLER" />
+        <!--登录表单设置-->
+
+        <form-login login-processing-url="/shoplogin" username-parameter="username"
+                             password-parameter="password" default-target-url="/admin/index.html"
+                             authentication-failure-url="/shoplogin.html" login-page="/shoplogin.html"
+                             always-use-default-target="true"/>
+        <!--csrf过滤器-->
+        <csrf disabled="true"/>
+        <!--退出登录-->
+        <logout logout-url="/logout" logout-success-url="/shoplogin.html" invalidate-session="true"/>
+    </http>
+
+    <!--3.认证管理-->
+    <authentication-manager>
+        <authentication-provider  user-service-ref="userDetailsService">
+            <!--认证策略-->
+            <password-encoder ref="passwordEncoder"/>
+        </authentication-provider>
+        <!--<authentication-provider>
+            <user-service>
+                &lt;!&ndash;配置用户名与密码所属角色为ROLE_USER&ndash;&gt;
+                <user name="admin" password="123456" authorities="ROLE_ADMIN"/>
+                <user name="tom" password="123456" authorities="ROLE_ADMIN"/>
+            </user-service>
+        </authentication-provider>-->
+    </authentication-manager>
+
+    <!--配置权限扩展类-->
+    <beans:bean id="userDetailsService" class="com.pinyougou.shop.service.UserDetailsServiceImpl"/>
+    <!--4.加密对象-->
+    <beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+    <!--5.开启注解权限-->
+    <!--<global-method-security pre-post-annotations="enabled"/>-->
+
+    <!-- 引用dubbo 服务 -->
+    <dubbo:application name="pinyougou-shop-web" />
+    <dubbo:registry address="zookeeper://192.168.218.128:2181"/>
+    <dubbo:annotation package="com.pinyougou.shop.service" />
+    <!--消费者关闭所有的启动检查-->
+    <dubbo:consumer check="false"/>
+
+</beans:beans>

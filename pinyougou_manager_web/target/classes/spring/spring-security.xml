@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                  http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <!--1.匿名访问
+    2.权限配置
+    iframe设置
+    权限设置
+    表单登录
+    csrf过滤器
+    退出登录
+    3.认证管理
+    认证逻辑
+    加密策略
+    4.密码加密对象
+    5.权限注解支持
+    6.权限注解扫描(扩大在mvc中的扫描范围)
+    7.mvc配置中引入security配置文件-->
+
+    <!--1.匿名访问-->
+    <http security="none" pattern="/css/**"/>
+    <http security="none" pattern="/img/**"/>
+    <http security="none" pattern="/js/**"/>
+    <http security="none" pattern="/plugins/**"/>
+    <http security="none" pattern="/login.html"/>
+
+
+    <!--2.权限配置-->
+    <http auto-config="true" use-expressions="false">
+        <!--iframe设置-->
+        <headers>
+            <frame-options policy="SAMEORIGIN"/>
+        </headers>
+        <!--权限设置-->
+        <intercept-url pattern="/**" access="ROLE_ADMIN" />
+        <!--登录表单设置-->
+        <!--
+            login-page：配置登录页面
+            default-target-url：登录成功跳转的页面
+            authentication-failure-url：登录失败跳转的页面
+            注意：以下三个地址必须带"/"不然会报错
+        -->
+
+        <form-login login-processing-url="/login" username-parameter="username"
+                             password-parameter="password" default-target-url="/admin/index.html"
+                             authentication-failure-forward-url="/login.html" login-page="/login.html"
+                             always-use-default-target="true"/>
+        <!--csrf过滤器-->
+        <csrf disabled="true"/>
+        <!--退出登录-->
+        <logout logout-url="/logout" logout-success-url="/login.html" invalidate-session="true"/>
+    </http>
+
+    <!--3.认证管理-->
+    <authentication-manager>
+        <!--<authentication-provider  user-service-ref="userSpringSecurityService">
+            &lt;!&ndash;认证策略&ndash;&gt;
+            <password-encoder ref="passwordEncoder"/>
+        </authentication-provider>-->
+        <authentication-provider>
+            <user-service>
+                <!--配置用户名与密码所属角色为ROLE_USER-->
+                <user name="admin" password="123456" authorities="ROLE_ADMIN"/>
+                <user name="tom" password="123456" authorities="ROLE_ADMIN"/>
+            </user-service>
+        </authentication-provider>
+
+    </authentication-manager>
+
+    <!--4.加密对象-->
+   <!-- <beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>-->
+
+    <!--5.开启注解权限-->
+    <!--<global-method-security pre-post-annotations="enabled"/>-->
+</beans:beans>
